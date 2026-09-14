@@ -1,14 +1,15 @@
 :root {
-  color-scheme: light;
-  --bg: #f5f7fa;
-  --panel: #ffffff;
-  --ink: #18212f;
-  --muted: #697586;
-  --line: #d9e0ea;
-  --accent: #176b87;
-  --accent-dark: #10516a;
-  --danger: #a33a3a;
-  --shadow: 0 20px 60px rgba(24, 33, 47, 0.12);
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #151b23;
+  --panel-soft: #1c2430;
+  --ink: #f2f6fb;
+  --muted: #9ca8b8;
+  --line: #2d3948;
+  --accent: #2db7c4;
+  --accent-dark: #1e8d98;
+  --danger: #ff7b7b;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
 }
 
 * {
@@ -22,8 +23,8 @@ body {
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(23, 107, 135, 0.16), transparent 32rem),
-    linear-gradient(135deg, #f5f7fa 0%, #edf3f7 48%, #f9f3ec 100%);
+    radial-gradient(circle at top left, rgba(45, 183, 196, 0.22), transparent 32rem),
+    linear-gradient(135deg, #0d1117 0%, #121823 52%, #17141f 100%);
   color: var(--ink);
 }
 
@@ -39,8 +40,8 @@ input {
 }
 
 .calculator {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(217, 224, 234, 0.9);
+  background: rgba(21, 27, 35, 0.95);
+  border: 1px solid rgba(45, 57, 72, 0.95);
   border-radius: 8px;
   box-shadow: var(--shadow);
   padding: clamp(20px, 4vw, 36px);
@@ -69,6 +70,13 @@ input {
   text-transform: uppercase;
 }
 
+.credit {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
 h1,
 h2 {
   margin: 0;
@@ -89,7 +97,7 @@ h2 {
   height: 44px;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--panel-soft);
   color: var(--ink);
   cursor: pointer;
 }
@@ -110,19 +118,21 @@ h2 {
 
 .money-input,
 .percent-input,
+.views-input,
 .view-input {
   display: flex;
   align-items: center;
   min-height: 52px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--panel-soft);
   color: var(--muted);
   overflow: hidden;
 }
 
 .money-input span,
-.percent-input span {
+.percent-input span,
+.views-input span {
   padding: 0 14px;
   font-weight: 800;
 }
@@ -134,6 +144,7 @@ input {
   outline: 0;
   padding: 14px;
   background: transparent;
+  caret-color: var(--accent);
   color: var(--ink);
   font-weight: 750;
 }
@@ -147,11 +158,16 @@ input {
   padding-right: 0;
 }
 
+.views-input input {
+  text-align: right;
+  padding-right: 0;
+}
+
 .views-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 18px;
-  background: #fbfcfd;
+  background: rgba(28, 36, 48, 0.72);
 }
 
 .panel-header {
@@ -190,17 +206,17 @@ input {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #e7eff3;
-  color: var(--accent-dark);
+  background: rgba(45, 183, 196, 0.16);
+  color: #71e4ec;
   font-weight: 900;
 }
 
 .remove-button {
   width: 42px;
   height: 42px;
-  border: 1px solid #ead2d2;
+  border: 1px solid rgba(255, 123, 123, 0.32);
   border-radius: 8px;
-  background: #fff7f7;
+  background: rgba(255, 123, 123, 0.1);
   color: var(--danger);
   font-size: 1.25rem;
   cursor: pointer;
@@ -222,7 +238,7 @@ input {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 16px;
-  background: #fff;
+  background: var(--panel-soft);
 }
 
 .totals span {
@@ -240,8 +256,8 @@ input {
 }
 
 .net-total {
-  border-color: rgba(23, 107, 135, 0.45) !important;
-  background: #f1f8fa !important;
+  border-color: rgba(45, 183, 196, 0.56) !important;
+  background: rgba(45, 183, 196, 0.12) !important;
 }
 
 @media (max-width: 720px) {

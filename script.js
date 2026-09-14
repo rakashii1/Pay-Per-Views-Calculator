@@ -2,6 +2,7 @@ const viewList = document.querySelector("#viewList");
 const addViewButton = document.querySelector("#addViewButton");
 const resetButton = document.querySelector("#resetButton");
 const payPerViewInput = document.querySelector("#payPerView");
+const perViewsInput = document.querySelector("#perViews");
 const taxRateInput = document.querySelector("#taxRate");
 const totalViewsOutput = document.querySelector("#totalViews");
 const grossPayOutput = document.querySelector("#grossPay");
@@ -43,9 +44,10 @@ function calculate() {
     (total, input) => total + toNumber(input.value),
     0,
   );
-  const payPerThousandViews = toNumber(payPerViewInput.value);
+  const payAmount = toNumber(payPerViewInput.value);
+  const perViews = Math.max(toNumber(perViewsInput.value), 1);
   const taxRate = toNumber(taxRateInput.value) / 100;
-  const grossPay = (views / 1000) * payPerThousandViews;
+  const grossPay = (views / perViews) * payAmount;
   const taxAmount = grossPay * taxRate;
   const netPay = Math.max(grossPay - taxAmount, 0);
 
@@ -66,7 +68,14 @@ function addViewRow(value = "") {
     <button class="remove-button" type="button" aria-label="Remove this views batch" title="Remove views batch">-</button>
   `;
 
-  row.querySelector("input").addEventListener("input", calculate);
+  const input = row.querySelector("input");
+  input.addEventListener("input", calculate);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addViewRow();
+    }
+  });
   row.querySelector(".remove-button").addEventListener("click", () => {
     row.remove();
     renumberRows();
@@ -78,18 +87,20 @@ function addViewRow(value = "") {
   renumberRows();
   updateRemoveButtons();
   calculate();
-  row.querySelector("input").focus();
+  input.focus();
 }
 
 addViewButton.addEventListener("click", () => addViewRow());
 resetButton.addEventListener("click", () => {
   payPerViewInput.value = "1.5";
-  taxRateInput.value = "0";
+  perViewsInput.value = "1000";
+  taxRateInput.value = "10";
   viewList.replaceChildren();
   addViewRow();
 });
 
 payPerViewInput.addEventListener("input", calculate);
+perViewsInput.addEventListener("input", calculate);
 taxRateInput.addEventListener("input", calculate);
 
 addViewRow();

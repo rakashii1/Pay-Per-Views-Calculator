@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Views Pay Calculator</title>
+    <title>Rakashii View Pay Calculator</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,7 +12,8 @@
         <div class="header">
           <div>
             <p class="eyebrow">Views calculator</p>
-            <h1 id="page-title">Pay per 1,000 views with tax</h1>
+            <h1 id="page-title">Views and Earnings Calculator</h1>
+            <p class="credit">made by rakashii</p>
           </div>
           <button class="icon-button" id="resetButton" type="button" aria-label="Reset calculator" title="Reset calculator">
             &#8634;
@@ -21,7 +22,7 @@
 
         <div class="rate-grid">
           <label class="field">
-            <span>Pay per 1,000 views</span>
+            <span>Pay amount</span>
             <div class="money-input">
               <span>$</span>
               <input id="payPerView" type="number" min="0" step="0.01" value="1.5" inputmode="decimal" />
@@ -29,9 +30,17 @@
           </label>
 
           <label class="field">
+            <span>Per views</span>
+            <div class="views-input">
+              <input id="perViews" type="number" min="1" step="1" value="1000" inputmode="numeric" />
+              <span>views</span>
+            </div>
+          </label>
+
+          <label class="field">
             <span>Tax percentage</span>
             <div class="percent-input">
-              <input id="taxRate" type="number" min="0" step="0.01" value="0" inputmode="decimal" />
+              <input id="taxRate" type="number" min="0" step="0.01" value="10" inputmode="decimal" />
               <span>%</span>
             </div>
           </label>
