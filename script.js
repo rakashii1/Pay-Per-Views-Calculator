@@ -36,8 +36,11 @@ function toNumber(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
-function getViewValues() {
-  return [...viewList.querySelectorAll(".view-input input")].map((input) => input.value);
+function getViewBatches() {
+  return [...viewList.querySelectorAll(".view-row")].map((row) => ({
+    value: row.querySelector(".view-input input").value,
+    excluded: row.classList.contains("is-excluded"),
+  }));
 }
 
 function saveCalculator() {
@@ -46,7 +49,7 @@ function saveCalculator() {
     perViews: perViewsInput.value,
     taxRate: taxRateInput.value,
     displayCurrency: currencySelect.value,
-    viewBatches: getViewValues(),
+    viewBatches: getViewBatches(),
   };
 
   localStorage.setItem(storageKey, JSON.stringify(state));
@@ -67,7 +70,21 @@ function loadCalculator() {
     viewList.replaceChildren();
 
     const savedBatches = Array.isArray(savedState.viewBatches)
-      ? savedState.viewBatches.filter((value) => value !== "")
+      ? savedState.viewBatches
+          .map((batch) => {
+            if (typeof batch === "object" && batch !== null) {
+              return {
+                value: batch.value || "",
+                excluded: Boolean(batch.excluded),
+              };
+            }
+
+            return {
+              value: batch || "",
+              excluded: false,
+            };
+          })
+          .filter((batch) => batch.value !== "")
       : [];
 
     if (savedBatches.length === 0) {
@@ -75,7 +92,7 @@ function loadCalculator() {
       return true;
     }
 
-    savedBatches.forEach((value) => addViewRow(value, false));
+    savedBatches.forEach((batch) => addViewRow(batch.value, false, batch.excluded));
     return true;
   } catch (error) {
     localStorage.removeItem(storageKey);
@@ -120,8 +137,11 @@ function updateRemoveButtons() {
 }
 
 function calculate() {
-  const views = [...viewList.querySelectorAll(".view-input input")].reduce(
-    (total, input) => total + toNumber(input.value),
+  const views = [...viewList.querySelectorAll(".view-row")].reduce(
+    (total, row) =>
+      row.classList.contains("is-excluded")
+        ? total
+        : total + toNumber(row.querySelector(".view-input input").value),
     0,
   );
   const payAmount = toNumber(payPerViewInput.value);
@@ -171,14 +191,32 @@ async function updateExchangeRate() {
   }
 }
 
-function addViewRow(value = "", shouldFocus = true) {
+function syncHideButton(row) {
+  const isExcluded = row.classList.contains("is-excluded");
+  const button = row.querySelector(".hide-button");
+  button.setAttribute("aria-pressed", String(isExcluded));
+  button.setAttribute(
+    "aria-label",
+    isExcluded ? "Include this views batch" : "Exclude this views batch",
+  );
+  button.title = isExcluded ? "Include views batch" : "Exclude views batch";
+}
+
+function addViewRow(value = "", shouldFocus = true, isExcluded = false) {
   const row = document.createElement("div");
   row.className = "view-row";
+  row.classList.toggle("is-excluded", isExcluded);
   row.innerHTML = `
     <span class="view-number"></span>
     <label class="view-input">
       <input type="number" min="0" step="1" inputmode="numeric" placeholder="Enter views" value="${value}">
     </label>
+    <button class="hide-button" type="button" aria-pressed="false" aria-label="Exclude this views batch" title="Exclude views batch">
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    </button>
     <button class="remove-button" type="button" aria-label="Remove this views batch" title="Remove views batch">-</button>
   `;
 
@@ -196,8 +234,14 @@ function addViewRow(value = "", shouldFocus = true) {
     updateRemoveButtons();
     calculate();
   });
+  row.querySelector(".hide-button").addEventListener("click", () => {
+    row.classList.toggle("is-excluded");
+    syncHideButton(row);
+    calculate();
+  });
 
   viewList.append(row);
+  syncHideButton(row);
   renumberRows();
   updateRemoveButtons();
   calculate();

@@ -227,7 +227,7 @@ select {
 
 .view-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 42px;
+  grid-template-columns: 34px minmax(0, 1fr) 42px 42px;
 }
 
 .view-number {
@@ -250,6 +250,42 @@ select {
   color: var(--danger);
   font-size: 1.25rem;
   cursor: pointer;
+}
+
+.hide-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(45, 183, 196, 0.32);
+  border-radius: 8px;
+  background: rgba(45, 183, 196, 0.1);
+  color: #71e4ec;
+  cursor: pointer;
+}
+
+.hide-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.view-row.is-excluded {
+  opacity: 0.48;
+}
+
+.view-row.is-excluded .view-input {
+  text-decoration: line-through;
+}
+
+.view-row.is-excluded .hide-button {
+  border-color: var(--line);
+  background: rgba(156, 168, 184, 0.1);
+  color: var(--muted);
 }
 
 .remove-button:disabled {
