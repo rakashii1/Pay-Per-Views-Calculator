@@ -154,13 +154,13 @@ input {
 }
 
 .percent-input input {
-  text-align: right;
-  padding-right: 0;
+  text-align: left;
+  padding-right: 14px;
 }
 
 .views-input input {
-  text-align: right;
-  padding-right: 0;
+  text-align: left;
+  padding-right: 14px;
 }
 
 .views-panel {
@@ -174,27 +174,25 @@ input {
   margin-bottom: 14px;
 }
 
-.add-control {
+#addViewButton {
   display: grid;
   justify-items: center;
-  gap: 6px;
-}
-
-.add-control span {
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 900;
-}
-
-#addViewButton {
-  min-height: 40px;
+  gap: 2px;
+  min-height: 52px;
   border: 0;
   border-radius: 8px;
-  padding: 0 14px;
+  padding: 7px 16px;
   background: var(--accent);
   color: #fff;
   font-weight: 800;
   cursor: pointer;
+}
+
+#addViewButton small {
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.82;
 }
 
 #addViewButton:hover,
@@ -290,10 +288,6 @@ input {
   .panel-header {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .add-control {
-    justify-items: stretch;
   }
 
   #addViewButton {
