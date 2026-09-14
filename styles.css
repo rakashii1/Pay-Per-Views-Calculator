@@ -227,7 +227,7 @@ select {
 
 .view-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 42px 42px;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(88px, 120px) 42px 42px;
 }
 
 .view-number {
@@ -250,6 +250,19 @@ select {
   color: var(--danger);
   font-size: 1.25rem;
   cursor: pointer;
+}
+
+.batch-earned {
+  display: grid;
+  align-items: center;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgba(13, 17, 23, 0.38);
+  color: var(--ink);
+  font-weight: 850;
+  overflow-wrap: anywhere;
 }
 
 .hide-button {
@@ -348,5 +361,13 @@ select {
 
   #addViewButton {
     width: 100%;
+  }
+
+  .view-row {
+    grid-template-columns: 34px minmax(0, 1fr) 42px 42px;
+  }
+
+  .batch-earned {
+    grid-column: 2 / -1;
   }
 }

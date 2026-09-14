@@ -151,11 +151,29 @@ function calculate() {
   const taxAmount = grossPay * taxRate;
   const netPay = Math.max(grossPay - taxAmount, 0);
 
+  updateBatchEarnings(payAmount, perViews);
   totalViewsOutput.textContent = integer.format(views);
   grossPayOutput.textContent = formatCurrency(grossPay);
   taxAmountOutput.textContent = formatCurrency(taxAmount);
   netPayOutput.textContent = formatCurrency(netPay);
   saveCalculator();
+}
+
+function formatUsd(amount) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: payCurrency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function updateBatchEarnings(payAmount, perViews) {
+  [...viewList.querySelectorAll(".view-row")].forEach((row) => {
+    const views = toNumber(row.querySelector(".view-input input").value);
+    const earned = (views / perViews) * payAmount;
+    row.querySelector(".batch-earned").textContent = formatUsd(earned);
+  });
 }
 
 async function updateExchangeRate() {
@@ -211,6 +229,7 @@ function addViewRow(value = "", shouldFocus = true, isExcluded = false) {
     <label class="view-input">
       <input type="number" min="0" step="1" inputmode="numeric" placeholder="Enter views" value="${value}">
     </label>
+    <output class="batch-earned" aria-label="Batch earned">$0.00</output>
     <button class="hide-button" type="button" aria-pressed="false" aria-label="Exclude this views batch" title="Exclude views batch">
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
