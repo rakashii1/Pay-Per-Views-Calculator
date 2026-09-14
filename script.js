@@ -11,8 +11,7 @@ const grossPayOutput = document.querySelector("#grossPay");
 const taxAmountOutput = document.querySelector("#taxAmount");
 const netPayOutput = document.querySelector("#netPay");
 
-const baseCurrency = "USD";
-const fallbackRates = {
+const fallbackUsdRates = {
   AUD: 1.52,
   CAD: 1.38,
   EUR: 0.86,
@@ -24,7 +23,8 @@ const fallbackRates = {
   SGD: 1.29,
   USD: 1,
 };
-let exchangeRate = fallbackRates.PHP;
+const payCurrency = "USD";
+let exchangeRate = fallbackUsdRates.PHP;
 
 const integer = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
@@ -36,12 +36,25 @@ function toNumber(value) {
 }
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat("en-US", {
+  const usdAmount = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: payCurrency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+
+  if (currencySelect.value === payCurrency) {
+    return usdAmount;
+  }
+
+  const convertedAmount = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currencySelect.value,
     minimumFractionDigits: 2,
     maximumFractionDigits: currencySelect.value === "JPY" || currencySelect.value === "KRW" ? 0 : 2,
   }).format(amount * exchangeRate);
+
+  return `${usdAmount} / ${convertedAmount}`;
 }
 
 function renumberRows() {
@@ -77,22 +90,22 @@ function calculate() {
 }
 
 async function updateExchangeRate() {
-  const selectedCurrency = currencySelect.value;
+  const displayCurrency = currencySelect.value;
 
-  if (selectedCurrency === baseCurrency) {
+  if (displayCurrency === payCurrency) {
     exchangeRate = 1;
-    rateStatus.textContent = "Showing USD totals.";
+    rateStatus.textContent = `Showing ${displayCurrency} totals.`;
     calculate();
     return;
   }
 
-  exchangeRate = fallbackRates[selectedCurrency] || 1;
-  rateStatus.textContent = `Loading live ${baseCurrency} to ${selectedCurrency} rate...`;
+  exchangeRate = fallbackUsdRates[displayCurrency] || 1;
+  rateStatus.textContent = `Loading latest ${payCurrency} to ${displayCurrency} rate...`;
   calculate();
 
   try {
     const response = await fetch(
-      `https://api.frankfurter.dev/v2/rate/${baseCurrency.toLowerCase()}/${selectedCurrency.toLowerCase()}`,
+      `https://api.frankfurter.dev/v2/rate/${payCurrency.toLowerCase()}/${displayCurrency.toLowerCase()}`,
     );
 
     if (!response.ok) {
@@ -101,10 +114,10 @@ async function updateExchangeRate() {
 
     const data = await response.json();
     exchangeRate = toNumber(data.rate) || exchangeRate;
-    rateStatus.textContent = `Live rate: 1 ${baseCurrency} = ${exchangeRate.toFixed(4)} ${selectedCurrency}`;
+    rateStatus.textContent = `Latest rate: 1 ${payCurrency} = ${exchangeRate.toFixed(4)} ${displayCurrency}`;
     calculate();
   } catch (error) {
-    rateStatus.textContent = `Using fallback rate: 1 ${baseCurrency} = ${exchangeRate.toFixed(4)} ${selectedCurrency}`;
+    rateStatus.textContent = `Using fallback rate: 1 ${payCurrency} = ${exchangeRate.toFixed(4)} ${displayCurrency}`;
     calculate();
   }
 }
