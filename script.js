@@ -11,6 +11,7 @@ const grossPayOutput = document.querySelector("#grossPay");
 const taxAmountOutput = document.querySelector("#taxAmount");
 const netPayOutput = document.querySelector("#netPay");
 
+const storageKey = "rakashii-view-pay-calculator";
 const fallbackUsdRates = {
   AUD: 1.52,
   CAD: 1.38,
@@ -33,6 +34,53 @@ const integer = new Intl.NumberFormat("en-US", {
 function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function getViewValues() {
+  return [...viewList.querySelectorAll(".view-input input")].map((input) => input.value);
+}
+
+function saveCalculator() {
+  const state = {
+    payAmount: payPerViewInput.value,
+    perViews: perViewsInput.value,
+    taxRate: taxRateInput.value,
+    displayCurrency: currencySelect.value,
+    viewBatches: getViewValues(),
+  };
+
+  localStorage.setItem(storageKey, JSON.stringify(state));
+}
+
+function loadCalculator() {
+  try {
+    const savedState = JSON.parse(localStorage.getItem(storageKey));
+
+    if (!savedState) {
+      return false;
+    }
+
+    payPerViewInput.value = savedState.payAmount || "1.5";
+    perViewsInput.value = savedState.perViews || "1000";
+    taxRateInput.value = savedState.taxRate || "10";
+    currencySelect.value = savedState.displayCurrency || "PHP";
+    viewList.replaceChildren();
+
+    const savedBatches = Array.isArray(savedState.viewBatches)
+      ? savedState.viewBatches.filter((value) => value !== "")
+      : [];
+
+    if (savedBatches.length === 0) {
+      addViewRow();
+      return true;
+    }
+
+    savedBatches.forEach((value) => addViewRow(value, false));
+    return true;
+  } catch (error) {
+    localStorage.removeItem(storageKey);
+    return false;
+  }
 }
 
 function formatCurrency(amount) {
@@ -87,6 +135,7 @@ function calculate() {
   grossPayOutput.textContent = formatCurrency(grossPay);
   taxAmountOutput.textContent = formatCurrency(taxAmount);
   netPayOutput.textContent = formatCurrency(netPay);
+  saveCalculator();
 }
 
 async function updateExchangeRate() {
@@ -122,7 +171,7 @@ async function updateExchangeRate() {
   }
 }
 
-function addViewRow(value = "") {
+function addViewRow(value = "", shouldFocus = true) {
   const row = document.createElement("div");
   row.className = "view-row";
   row.innerHTML = `
@@ -152,7 +201,10 @@ function addViewRow(value = "") {
   renumberRows();
   updateRemoveButtons();
   calculate();
-  input.focus();
+
+  if (shouldFocus) {
+    input.focus();
+  }
 }
 
 addViewButton.addEventListener("click", () => addViewRow());
@@ -161,6 +213,7 @@ resetButton.addEventListener("click", () => {
   perViewsInput.value = "1000";
   taxRateInput.value = "10";
   currencySelect.value = "PHP";
+  localStorage.removeItem(storageKey);
   viewList.replaceChildren();
   addViewRow();
   updateExchangeRate();
@@ -171,5 +224,7 @@ perViewsInput.addEventListener("input", calculate);
 taxRateInput.addEventListener("input", calculate);
 currencySelect.addEventListener("change", updateExchangeRate);
 
-addViewRow();
+if (!loadCalculator()) {
+  addViewRow();
+}
 updateExchangeRate();
