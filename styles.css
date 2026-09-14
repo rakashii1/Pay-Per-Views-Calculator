@@ -222,12 +222,26 @@ select {
 
 .view-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+}
+
+.batch-heading {
+  display: grid;
+  grid-template-columns: 34px minmax(150px, 1fr) minmax(190px, 1.15fr) 96px;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0 2px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
 .view-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(150px, 190px) 42px 42px;
+  grid-template-columns: 34px minmax(150px, 1fr) minmax(190px, 1.15fr) 96px;
+  gap: 12px;
+  padding: 6px 2px;
 }
 
 .view-number {
@@ -252,13 +266,19 @@ select {
   cursor: pointer;
 }
 
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .batch-earned {
-  display: grid;
+  display: flex;
   align-items: center;
-  min-height: 42px;
+  min-height: 46px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 0 12px;
+  padding: 8px 12px;
   background: rgba(13, 17, 23, 0.38);
   color: var(--ink);
   font-weight: 850;
@@ -365,10 +385,18 @@ select {
     width: 100%;
   }
 
+  .batch-heading {
+    display: none;
+  }
+
   .view-row {
     align-items: stretch;
-    gap: 10px;
-    grid-template-columns: 34px 1fr 42px 42px;
+    gap: 8px;
+    grid-template-columns: 34px 1fr auto;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(13, 17, 23, 0.2);
   }
 
   .view-input {
@@ -379,11 +407,8 @@ select {
     grid-column: 2 / -1;
   }
 
-  .hide-button {
-    grid-column: 3;
-  }
-
-  .remove-button {
-    grid-column: 4;
+  .row-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-end;
   }
 }

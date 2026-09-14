@@ -224,13 +224,15 @@ function addViewRow(batch = "", shouldFocus = true, isExcluded = false) {
       <input type="number" min="0" step="1" inputmode="numeric" placeholder="Enter views" value="${value}">
     </label>
     <output class="batch-earned" aria-label="Batch earned">$0.00</output>
-    <button class="hide-button" type="button" aria-pressed="false" aria-label="Exclude this views batch" title="Exclude views batch">
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
-      </svg>
-    </button>
-    <button class="remove-button" type="button" aria-label="Remove this views batch" title="Remove views batch">-</button>
+    <div class="row-actions">
+      <button class="hide-button" type="button" aria-pressed="false" aria-label="Exclude this views batch" title="Exclude views batch">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+      <button class="remove-button" type="button" aria-label="Remove this views batch" title="Remove views batch">-</button>
+    </div>
   `;
 
   const input = row.querySelector(".view-input input");
