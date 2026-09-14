@@ -227,7 +227,7 @@ select {
 
 .view-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(88px, 120px) 42px 42px;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(150px, 190px) 42px 42px;
 }
 
 .view-number {
@@ -262,7 +262,9 @@ select {
   background: rgba(13, 17, 23, 0.38);
   color: var(--ink);
   font-weight: 850;
+  line-height: 1.3;
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .hide-button {

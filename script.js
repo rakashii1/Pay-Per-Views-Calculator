@@ -159,20 +159,11 @@ function calculate() {
   saveCalculator();
 }
 
-function formatUsd(amount) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: payCurrency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
 function updateBatchEarnings(payAmount, perViews) {
   [...viewList.querySelectorAll(".view-row")].forEach((row) => {
     const views = toNumber(row.querySelector(".view-input input").value);
     const earned = (views / perViews) * payAmount;
-    row.querySelector(".batch-earned").textContent = formatUsd(earned);
+    row.querySelector(".batch-earned").textContent = formatCurrency(earned);
   });
 }
 
