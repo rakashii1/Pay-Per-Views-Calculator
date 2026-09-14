@@ -44,7 +44,25 @@
               <span>%</span>
             </div>
           </label>
+
+          <label class="field">
+            <span>Display currency</span>
+            <select id="currencySelect">
+              <option value="PHP" selected>PHP - Philippine Peso</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="JPY">JPY - Japanese Yen</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+              <option value="AUD">AUD - Australian Dollar</option>
+              <option value="SGD">SGD - Singapore Dollar</option>
+              <option value="KRW">KRW - South Korean Won</option>
+              <option value="INR">INR - Indian Rupee</option>
+            </select>
+          </label>
         </div>
+
+        <p class="rate-status" id="rateStatus">Loading exchange rate...</p>
 
         <section class="views-panel" aria-labelledby="views-title">
           <div class="panel-header">
