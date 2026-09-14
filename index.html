@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Views Pay Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="calculator" aria-labelledby="page-title">
+        <div class="header">
+          <div>
+            <p class="eyebrow">Views calculator</p>
+            <h1 id="page-title">Pay per 1,000 views with tax</h1>
+          </div>
+          <button class="icon-button" id="resetButton" type="button" aria-label="Reset calculator" title="Reset calculator">
+            &#8634;
+          </button>
+        </div>
+
+        <div class="rate-grid">
+          <label class="field">
+            <span>Pay per 1,000 views</span>
+            <div class="money-input">
+              <span>$</span>
+              <input id="payPerView" type="number" min="0" step="0.01" value="1.5" inputmode="decimal" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Tax percentage</span>
+            <div class="percent-input">
+              <input id="taxRate" type="number" min="0" step="0.01" value="0" inputmode="decimal" />
+              <span>%</span>
+            </div>
+          </label>
+        </div>
+
+        <section class="views-panel" aria-labelledby="views-title">
+          <div class="panel-header">
+            <h2 id="views-title">View batches</h2>
+            <button id="addViewButton" type="button">+ Add next views</button>
+          </div>
+
+          <div class="view-list" id="viewList"></div>
+        </section>
+
+        <section class="totals" aria-label="Calculator totals">
+          <div>
+            <span>Total views</span>
+            <strong id="totalViews">0</strong>
+          </div>
+          <div>
+            <span>Gross pay</span>
+            <strong id="grossPay">$0.00</strong>
+          </div>
+          <div>
+            <span>Tax</span>
+            <strong id="taxAmount">$0.00</strong>
+          </div>
+          <div class="net-total">
+            <span>Net pay</span>
+            <strong id="netPay">$0.00</strong>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
