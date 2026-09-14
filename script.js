@@ -39,6 +39,7 @@ function toNumber(value) {
 function getViewBatches() {
   return [...viewList.querySelectorAll(".view-row")].map((row) => ({
     value: row.querySelector(".view-input input").value,
+    date: row.querySelector(".date-input").value,
     excluded: row.classList.contains("is-excluded"),
   }));
 }
@@ -75,12 +76,14 @@ function loadCalculator() {
             if (typeof batch === "object" && batch !== null) {
               return {
                 value: batch.value || "",
+                date: batch.date || "",
                 excluded: Boolean(batch.excluded),
               };
             }
 
             return {
               value: batch || "",
+              date: "",
               excluded: false,
             };
           })
@@ -92,7 +95,7 @@ function loadCalculator() {
       return true;
     }
 
-    savedBatches.forEach((batch) => addViewRow(batch.value, false, batch.excluded));
+    savedBatches.forEach((batch) => addViewRow(batch, false));
     return true;
   } catch (error) {
     localStorage.removeItem(storageKey);
@@ -125,7 +128,8 @@ function formatCurrency(amount) {
 function renumberRows() {
   [...viewList.querySelectorAll(".view-row")].forEach((row, index) => {
     row.querySelector(".view-number").textContent = index + 1;
-    row.querySelector("label").setAttribute("aria-label", `Views batch ${index + 1}`);
+    row.querySelector(".view-input").setAttribute("aria-label", `Views batch ${index + 1}`);
+    row.querySelector(".date-input").setAttribute("aria-label", `Date for batch ${index + 1}`);
   });
 }
 
@@ -211,12 +215,17 @@ function syncHideButton(row) {
   button.title = isExcluded ? "Include views batch" : "Exclude views batch";
 }
 
-function addViewRow(value = "", shouldFocus = true, isExcluded = false) {
+function addViewRow(batch = "", shouldFocus = true, isExcluded = false) {
+  const value = typeof batch === "object" && batch !== null ? batch.value || "" : batch;
+  const date = typeof batch === "object" && batch !== null ? batch.date || "" : "";
+  const excluded =
+    typeof batch === "object" && batch !== null ? Boolean(batch.excluded) : Boolean(isExcluded);
   const row = document.createElement("div");
   row.className = "view-row";
-  row.classList.toggle("is-excluded", isExcluded);
+  row.classList.toggle("is-excluded", excluded);
   row.innerHTML = `
     <span class="view-number"></span>
+    <input class="date-input" type="date" title="Optional batch date" value="${date}">
     <label class="view-input">
       <input type="number" min="0" step="1" inputmode="numeric" placeholder="Enter views" value="${value}">
     </label>
@@ -230,7 +239,8 @@ function addViewRow(value = "", shouldFocus = true, isExcluded = false) {
     <button class="remove-button" type="button" aria-label="Remove this views batch" title="Remove views batch">-</button>
   `;
 
-  const input = row.querySelector("input");
+  const input = row.querySelector(".view-input input");
+  row.querySelector(".date-input").addEventListener("input", saveCalculator);
   input.addEventListener("input", calculate);
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {

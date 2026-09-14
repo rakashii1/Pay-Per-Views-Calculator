@@ -131,6 +131,19 @@ h2 {
   overflow: hidden;
 }
 
+.date-input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.date-input {
+  padding: 0 10px;
+}
+
 .money-input span,
 .percent-input span,
 .views-input span {
@@ -227,7 +240,7 @@ select {
 
 .view-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(150px, 190px) 42px 42px;
+  grid-template-columns: 34px minmax(130px, 150px) minmax(0, 1fr) minmax(150px, 190px) 42px 42px;
 }
 
 .view-number {
@@ -366,10 +379,28 @@ select {
   }
 
   .view-row {
-    grid-template-columns: 34px minmax(0, 1fr) 42px 42px;
+    align-items: stretch;
+    gap: 10px;
+    grid-template-columns: 34px 1fr 42px 42px;
+  }
+
+  .date-input {
+    grid-column: 2 / -1;
+  }
+
+  .view-input {
+    grid-column: 2 / -1;
   }
 
   .batch-earned {
     grid-column: 2 / -1;
+  }
+
+  .hide-button {
+    grid-column: 3;
+  }
+
+  .remove-button {
+    grid-column: 4;
   }
 }
