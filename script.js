@@ -65,7 +65,7 @@ function loadCalculator() {
 
     payPerViewInput.value = savedState.payAmount || "1.5";
     perViewsInput.value = savedState.perViews || "1000";
-    taxRateInput.value = savedState.taxRate || "10";
+    taxRateInput.value = savedState.taxRate || "7";
     currencySelect.value = savedState.displayCurrency || "PHP";
     viewList.replaceChildren();
 
@@ -270,7 +270,7 @@ addViewButton.addEventListener("click", () => addViewRow());
 resetButton.addEventListener("click", () => {
   payPerViewInput.value = "1.5";
   perViewsInput.value = "1000";
-  taxRateInput.value = "10";
+  taxRateInput.value = "7";
   currencySelect.value = "PHP";
   localStorage.removeItem(storageKey);
   viewList.replaceChildren();
