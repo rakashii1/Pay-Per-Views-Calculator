@@ -198,8 +198,14 @@ def downloader():
     return send_from_directory(BASE_DIR, "downloader.html")
 
 
-@app.route("/api/info", methods=["POST"])
+@app.route("/api/info", methods=["GET", "POST"])
 def get_info():
+    if request.method == "GET":
+        return jsonify({
+            "ok": True,
+            "message": "Downloader API is running. Send a POST request with a video URL to use this endpoint.",
+        })
+
     data = request.json or {}
     url = data.get("url", "").strip()
     if not url:
