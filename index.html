@@ -15,9 +15,12 @@
             <h1 id="page-title">Views and Earnings Calculator</h1>
             <p class="credit">Made by Rakashii</p>
           </div>
-          <button class="icon-button" id="resetButton" type="button" aria-label="Reset calculator" title="Reset calculator">
-            &#8634;
-          </button>
+          <div class="header-actions">
+            <a class="nav-button" id="downloaderLink" href="/downloader.html">Video Downloader</a>
+            <button class="icon-button" id="resetButton" type="button" aria-label="Reset calculator" title="Reset calculator">
+              &#8634;
+            </button>
+          </div>
         </div>
 
         <div class="rate-grid">
@@ -104,5 +107,11 @@
     </main>
 
     <script src="script.js"></script>
+    <script>
+      const downloaderLink = document.querySelector("#downloaderLink");
+      if (window.location.protocol === "file:") {
+        downloaderLink.href = "http://127.0.0.1:4173/downloader";
+      }
+    </script>
   </body>
 </html>
