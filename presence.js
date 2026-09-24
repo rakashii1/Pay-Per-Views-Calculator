@@ -3,7 +3,7 @@
     ? "http://127.0.0.1:4173/api/presence"
     : "/api/presence";
   const storageKey = "rakashii-presence-client-id";
-  const heartbeatInterval = 20_000;
+  const heartbeatInterval = 7_000;
 
   function getClientId() {
     try {

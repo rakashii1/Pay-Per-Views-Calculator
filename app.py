@@ -24,7 +24,7 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 jobs = {}
 presence_clients = {}
 presence_lock = threading.Lock()
-PRESENCE_TTL_SECONDS = 45
+PRESENCE_TTL_SECONDS = 15
 YTDLP_CMD = [sys.executable, "-m", "yt_dlp"]
 FFMPEG_LOCATION = imageio_ffmpeg.get_ffmpeg_exe()
 
