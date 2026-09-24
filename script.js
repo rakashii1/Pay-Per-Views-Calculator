@@ -10,6 +10,9 @@ const totalViewsOutput = document.querySelector("#totalViews");
 const grossPayOutput = document.querySelector("#grossPay");
 const taxAmountOutput = document.querySelector("#taxAmount");
 const netPayOutput = document.querySelector("#netPay");
+const calcDisplay = document.querySelector("#calcDisplay");
+const calcHistory = document.querySelector("#calcHistory");
+const calcButtons = document.querySelectorAll("[data-calc], [data-calc-number], [data-calc-operator]");
 
 const storageKey = "rakashii-view-pay-calculator";
 const fallbackUsdRates = {
@@ -26,6 +29,10 @@ const fallbackUsdRates = {
 };
 const payCurrency = "USD";
 let exchangeRate = fallbackUsdRates.PHP;
+let calcDisplayValue = "0";
+let calcFirstValue = null;
+let calcOperator = null;
+let calcWaitingForNext = false;
 
 const integer = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
@@ -34,6 +41,155 @@ const integer = new Intl.NumberFormat("en-US", {
 function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function updateQuickCalculatorDisplay() {
+  calcDisplay.value = calcDisplayValue;
+}
+
+function sanitizeCalcNumber(value) {
+  const text = String(value || "");
+  const isNegative = text.trim().startsWith("-");
+  const digits = [];
+  let hasDecimal = false;
+
+  for (const char of text) {
+    if (/[0-9]/.test(char)) {
+      digits.push(char);
+    } else if (char === "." && !hasDecimal) {
+      digits.push(char);
+      hasDecimal = true;
+    }
+  }
+
+  let sanitized = digits.join("");
+  if (!sanitized || sanitized === ".") sanitized = "0";
+  if (sanitized.startsWith(".")) sanitized = `0${sanitized}`;
+  sanitized = sanitized.replace(/^0+(?=\d)/, "");
+  return isNegative && sanitized !== "0" ? `-${sanitized}` : sanitized;
+}
+
+function formatCalcNumber(value) {
+  if (!Number.isFinite(value)) return "Error";
+  return Number.parseFloat(value.toFixed(10)).toString();
+}
+
+function calculatePair(firstValue, secondValue, operator) {
+  if (operator === "+") return firstValue + secondValue;
+  if (operator === "-") return firstValue - secondValue;
+  if (operator === "*") return firstValue * secondValue;
+  if (operator === "/") return secondValue === 0 ? NaN : firstValue / secondValue;
+  return secondValue;
+}
+
+function clearQuickCalculator() {
+  calcDisplayValue = "0";
+  calcFirstValue = null;
+  calcOperator = null;
+  calcWaitingForNext = false;
+  calcHistory.textContent = "";
+  updateQuickCalculatorDisplay();
+}
+
+function inputCalcDigit(digit) {
+  if (calcDisplayValue === "Error" || calcWaitingForNext) {
+    calcDisplayValue = digit;
+    calcWaitingForNext = false;
+  } else {
+    calcDisplayValue = calcDisplayValue === "0" ? digit : `${calcDisplayValue}${digit}`;
+  }
+
+  updateQuickCalculatorDisplay();
+}
+
+function setQuickCalculatorValue(value) {
+  calcDisplayValue = sanitizeCalcNumber(value);
+  calcWaitingForNext = false;
+  updateQuickCalculatorDisplay();
+}
+
+function inputCalcDecimal() {
+  if (calcDisplayValue === "Error" || calcWaitingForNext) {
+    calcDisplayValue = "0.";
+    calcWaitingForNext = false;
+  } else if (!calcDisplayValue.includes(".")) {
+    calcDisplayValue = `${calcDisplayValue}.`;
+  }
+
+  updateQuickCalculatorDisplay();
+}
+
+function inputCalcOperator(nextOperator) {
+  const inputValue = Number(calcDisplayValue);
+  if (!Number.isFinite(inputValue)) {
+    clearQuickCalculator();
+    return;
+  }
+
+  if (calcOperator && calcWaitingForNext) {
+    calcOperator = nextOperator;
+    calcHistory.textContent = `${formatCalcNumber(calcFirstValue)} ${nextOperator}`;
+    return;
+  }
+
+  if (calcFirstValue === null) {
+    calcFirstValue = inputValue;
+  } else if (calcOperator) {
+    const result = calculatePair(calcFirstValue, inputValue, calcOperator);
+    calcDisplayValue = formatCalcNumber(result);
+    calcFirstValue = Number(calcDisplayValue);
+    updateQuickCalculatorDisplay();
+  }
+
+  calcOperator = nextOperator;
+  calcWaitingForNext = true;
+  calcHistory.textContent = `${formatCalcNumber(calcFirstValue)} ${nextOperator}`;
+}
+
+function completeCalcOperation() {
+  if (!calcOperator || calcFirstValue === null) return;
+  const secondValue = Number(calcDisplayValue);
+  const result = calculatePair(calcFirstValue, secondValue, calcOperator);
+  calcHistory.textContent = `${formatCalcNumber(calcFirstValue)} ${calcOperator} ${formatCalcNumber(secondValue)} =`;
+  calcDisplayValue = formatCalcNumber(result);
+  calcFirstValue = null;
+  calcOperator = null;
+  calcWaitingForNext = true;
+  updateQuickCalculatorDisplay();
+}
+
+function backspaceQuickCalculator() {
+  if (calcDisplayValue === "Error" || calcWaitingForNext) {
+    calcDisplayValue = "0";
+  } else {
+    calcDisplayValue = calcDisplayValue.length > 1 ? calcDisplayValue.slice(0, -1) : "0";
+  }
+
+  updateQuickCalculatorDisplay();
+}
+
+function percentQuickCalculator() {
+  const value = Number(calcDisplayValue);
+  if (!Number.isFinite(value)) return;
+  calcDisplayValue = formatCalcNumber(value / 100);
+  updateQuickCalculatorDisplay();
+}
+
+function toggleQuickCalculatorSign() {
+  if (calcDisplayValue === "0" || calcDisplayValue === "Error") return;
+  calcDisplayValue = calcDisplayValue.startsWith("-")
+    ? calcDisplayValue.slice(1)
+    : `-${calcDisplayValue}`;
+  updateQuickCalculatorDisplay();
+}
+
+function handleQuickCalculatorAction(action) {
+  if (action === "clear") clearQuickCalculator();
+  if (action === "backspace") backspaceQuickCalculator();
+  if (action === "percent") percentQuickCalculator();
+  if (action === "decimal") inputCalcDecimal();
+  if (action === "sign") toggleQuickCalculatorSign();
+  if (action === "equals") completeCalcOperation();
 }
 
 function getViewBatches() {
@@ -278,6 +434,113 @@ resetButton.addEventListener("click", () => {
   updateExchangeRate();
 });
 
+calcButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.calcNumber !== undefined) {
+      inputCalcDigit(button.dataset.calcNumber);
+    }
+
+    if (button.dataset.calcOperator !== undefined) {
+      inputCalcOperator(button.dataset.calcOperator);
+    }
+
+    if (button.dataset.calc !== undefined) {
+      handleQuickCalculatorAction(button.dataset.calc);
+    }
+  });
+});
+
+calcDisplay.addEventListener("keydown", (event) => {
+  if (/^[0-9]$/.test(event.key)) {
+    event.preventDefault();
+    inputCalcDigit(event.key);
+    return;
+  }
+
+  if (["+", "-", "*", "/"].includes(event.key)) {
+    event.preventDefault();
+    inputCalcOperator(event.key);
+    return;
+  }
+
+  if (event.key === ".") {
+    event.preventDefault();
+    inputCalcDecimal();
+    return;
+  }
+
+  if (event.key === "Enter" || event.key === "=") {
+    event.preventDefault();
+    completeCalcOperation();
+    return;
+  }
+
+  if (event.key === "Backspace") {
+    event.preventDefault();
+    backspaceQuickCalculator();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    clearQuickCalculator();
+    return;
+  }
+
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") return;
+  if (["Tab", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+});
+
+calcDisplay.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const pastedText = event.clipboardData?.getData("text") || "";
+  setQuickCalculatorValue(pastedText);
+});
+
+calcDisplay.addEventListener("input", () => {
+  setQuickCalculatorValue(calcDisplay.value);
+});
+
+document.addEventListener("keydown", (event) => {
+  const activeElement = document.activeElement;
+  const activeTag = activeElement?.tagName;
+  if ((activeTag === "INPUT" && activeElement !== calcDisplay) || activeTag === "SELECT") return;
+  if (activeElement === calcDisplay) return;
+
+  if (/^[0-9]$/.test(event.key)) {
+    inputCalcDigit(event.key);
+    return;
+  }
+
+  if (["+", "-", "*", "/"].includes(event.key)) {
+    event.preventDefault();
+    inputCalcOperator(event.key);
+    return;
+  }
+
+  if (event.key === ".") {
+    inputCalcDecimal();
+    return;
+  }
+
+  if (event.key === "Enter" || event.key === "=") {
+    event.preventDefault();
+    completeCalcOperation();
+    return;
+  }
+
+  if (event.key === "Backspace") {
+    event.preventDefault();
+    backspaceQuickCalculator();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    clearQuickCalculator();
+  }
+});
+
 payPerViewInput.addEventListener("input", calculate);
 perViewsInput.addEventListener("input", calculate);
 taxRateInput.addEventListener("input", calculate);
@@ -287,3 +550,4 @@ if (!loadCalculator()) {
   addViewRow();
 }
 updateExchangeRate();
+updateQuickCalculatorDisplay();

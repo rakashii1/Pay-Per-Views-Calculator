@@ -104,6 +104,45 @@
           </div>
         </section>
       </section>
+
+      <section class="simple-calculator" aria-labelledby="simple-calculator-title">
+        <div class="simple-calculator-header">
+          <div>
+            <p class="eyebrow">Quick calculator</p>
+            <h2 id="simple-calculator-title">Calculator</h2>
+          </div>
+        </div>
+
+        <div class="calc-body">
+          <div class="calc-display-wrap">
+            <output class="calc-history" id="calcHistory" aria-live="polite"></output>
+            <input id="calcDisplay" class="calc-display" type="text" value="0" inputmode="decimal" aria-label="Calculator display" />
+          </div>
+
+          <div class="calc-keypad" aria-label="Calculator buttons">
+            <button type="button" data-calc="clear">C</button>
+            <button type="button" data-calc="backspace">DEL</button>
+            <button type="button" data-calc="percent">%</button>
+            <button class="calc-operator" type="button" data-calc-operator="/">/</button>
+            <button type="button" data-calc-number="7">7</button>
+            <button type="button" data-calc-number="8">8</button>
+            <button type="button" data-calc-number="9">9</button>
+            <button class="calc-operator" type="button" data-calc-operator="*">x</button>
+            <button type="button" data-calc-number="4">4</button>
+            <button type="button" data-calc-number="5">5</button>
+            <button type="button" data-calc-number="6">6</button>
+            <button class="calc-operator" type="button" data-calc-operator="-">-</button>
+            <button type="button" data-calc-number="1">1</button>
+            <button type="button" data-calc-number="2">2</button>
+            <button type="button" data-calc-number="3">3</button>
+            <button class="calc-operator" type="button" data-calc-operator="+">+</button>
+            <button type="button" data-calc="sign">+/-</button>
+            <button type="button" data-calc-number="0">0</button>
+            <button type="button" data-calc="decimal">.</button>
+            <button class="calc-equals" type="button" data-calc="equals">=</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script src="script.js"></script>
