@@ -22,9 +22,17 @@
   badge.className = "presence-badge";
   badge.setAttribute("role", "status");
   badge.setAttribute("aria-live", "polite");
+  badge.setAttribute("aria-label", "Users online now");
+  badge.title = "Users online now";
   badge.innerHTML = `
-    <span class="presence-dot" aria-hidden="true"></span>
-    <span><strong class="presence-count">--</strong> online now</span>
+    <span class="presence-mark" aria-hidden="true">
+      <svg class="presence-user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="7" r="4"></circle>
+        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
+      </svg>
+      <span class="presence-dot"></span>
+    </span>
+    <strong class="presence-count">--</strong>
   `;
   document.body.append(badge);
 
