@@ -10,11 +10,17 @@ const totalViewsOutput = document.querySelector("#totalViews");
 const grossPayOutput = document.querySelector("#grossPay");
 const taxAmountOutput = document.querySelector("#taxAmount");
 const netPayOutput = document.querySelector("#netPay");
+const quickCalculator = document.querySelector(".simple-calculator");
 const calcDisplay = document.querySelector("#calcDisplay");
 const calcHistory = document.querySelector("#calcHistory");
+const calcHistoryToggle = document.querySelector("#calcHistoryToggle");
+const calcHistoryPanel = document.querySelector("#calcHistoryPanel");
+const calcHistoryList = document.querySelector("#calcHistoryList");
+const clearCalcHistoryButton = document.querySelector("#clearCalcHistory");
 const calcButtons = document.querySelectorAll("[data-calc], [data-calc-number], [data-calc-operator]");
 
 const storageKey = "rakashii-view-pay-calculator";
+const quickCalculatorHistoryKey = "rakashii-quick-calculator-history";
 const fallbackUsdRates = {
   AUD: 1.52,
   CAD: 1.38,
@@ -33,6 +39,8 @@ let calcDisplayValue = "0";
 let calcFirstValue = null;
 let calcOperator = null;
 let calcWaitingForNext = false;
+let quickCalculatorActive = false;
+let calcHistoryEntries = [];
 
 const integer = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
@@ -80,6 +88,70 @@ function calculatePair(firstValue, secondValue, operator) {
   if (operator === "*") return firstValue * secondValue;
   if (operator === "/") return secondValue === 0 ? NaN : firstValue / secondValue;
   return secondValue;
+}
+
+function renderCalcHistory() {
+  calcHistoryList.replaceChildren();
+
+  if (!calcHistoryEntries.length) {
+    const emptyMessage = document.createElement("p");
+    emptyMessage.className = "calc-history-empty";
+    emptyMessage.textContent = "No calculations yet.";
+    calcHistoryList.append(emptyMessage);
+    return;
+  }
+
+  calcHistoryEntries.forEach(({ expression, result }) => {
+    const entry = document.createElement("div");
+    entry.className = "calc-history-entry";
+
+    const expressionOutput = document.createElement("span");
+    expressionOutput.className = "calc-history-expression";
+    expressionOutput.textContent = expression;
+
+    const resultOutput = document.createElement("strong");
+    resultOutput.className = "calc-history-result";
+    resultOutput.textContent = result;
+
+    entry.append(expressionOutput, resultOutput);
+    calcHistoryList.append(entry);
+  });
+}
+
+function saveCalcHistory() {
+  localStorage.setItem(quickCalculatorHistoryKey, JSON.stringify(calcHistoryEntries));
+}
+
+function loadCalcHistory() {
+  try {
+    const savedHistory = JSON.parse(localStorage.getItem(quickCalculatorHistoryKey));
+    calcHistoryEntries = Array.isArray(savedHistory)
+      ? savedHistory.filter((entry) => entry && typeof entry.expression === "string" && typeof entry.result === "string").slice(0, 50)
+      : [];
+  } catch {
+    calcHistoryEntries = [];
+  }
+
+  renderCalcHistory();
+}
+
+function addCalcHistoryEntry(expression, result) {
+  calcHistoryEntries.unshift({ expression, result });
+  calcHistoryEntries = calcHistoryEntries.slice(0, 50);
+  saveCalcHistory();
+  renderCalcHistory();
+}
+
+function toggleCalcHistory() {
+  const isOpen = !calcHistoryPanel.hidden;
+  calcHistoryPanel.hidden = isOpen;
+  calcHistoryToggle.setAttribute("aria-expanded", String(!isOpen));
+}
+
+function clearCalcHistory() {
+  calcHistoryEntries = [];
+  saveCalcHistory();
+  renderCalcHistory();
 }
 
 function clearQuickCalculator() {
@@ -150,8 +222,11 @@ function completeCalcOperation() {
   if (!calcOperator || calcFirstValue === null) return;
   const secondValue = Number(calcDisplayValue);
   const result = calculatePair(calcFirstValue, secondValue, calcOperator);
-  calcHistory.textContent = `${formatCalcNumber(calcFirstValue)} ${calcOperator} ${formatCalcNumber(secondValue)} =`;
-  calcDisplayValue = formatCalcNumber(result);
+  const expression = `${formatCalcNumber(calcFirstValue)} ${calcOperator} ${formatCalcNumber(secondValue)}`;
+  const formattedResult = formatCalcNumber(result);
+  calcHistory.textContent = `${expression} =`;
+  addCalcHistoryEntry(`${expression} =`, formattedResult);
+  calcDisplayValue = formattedResult;
   calcFirstValue = null;
   calcOperator = null;
   calcWaitingForNext = true;
@@ -166,6 +241,26 @@ function backspaceQuickCalculator() {
   }
 
   updateQuickCalculatorDisplay();
+}
+
+function deleteSelectedCalcText() {
+  const start = calcDisplay.selectionStart ?? 0;
+  const end = calcDisplay.selectionEnd ?? start;
+  const value = calcDisplay.value;
+
+  if (start === end) {
+    if (start >= value.length) return;
+    setQuickCalculatorValue(`${value.slice(0, start)}${value.slice(start + 1) || "0"}`);
+    calcDisplay.focus();
+    calcDisplay.setSelectionRange(start, start);
+    return;
+  }
+
+  const nextValue = `${value.slice(0, start)}${value.slice(end)}` || "0";
+  setQuickCalculatorValue(nextValue);
+  calcDisplay.focus();
+  const nextPosition = Math.min(start, calcDisplay.value.length);
+  calcDisplay.setSelectionRange(nextPosition, nextPosition);
 }
 
 function percentQuickCalculator() {
@@ -436,6 +531,8 @@ resetButton.addEventListener("click", () => {
 
 calcButtons.forEach((button) => {
   button.addEventListener("click", () => {
+    quickCalculatorActive = true;
+
     if (button.dataset.calcNumber !== undefined) {
       inputCalcDigit(button.dataset.calcNumber);
     }
@@ -450,7 +547,39 @@ calcButtons.forEach((button) => {
   });
 });
 
+calcHistoryToggle.addEventListener("click", toggleCalcHistory);
+clearCalcHistoryButton.addEventListener("click", clearCalcHistory);
+
+quickCalculator.addEventListener("pointerdown", (event) => {
+  quickCalculatorActive = true;
+  if (event.target.closest("button")) return;
+  calcDisplay.focus();
+});
+
+quickCalculator.addEventListener("focusin", () => {
+  quickCalculatorActive = true;
+});
+
+quickCalculator.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const pastedText = event.clipboardData?.getData("text") || "";
+  setQuickCalculatorValue(pastedText);
+  calcDisplay.focus();
+});
+
 calcDisplay.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
+    event.preventDefault();
+    calcDisplay.select();
+    return;
+  }
+
+  if (event.key === "Delete") {
+    event.preventDefault();
+    deleteSelectedCalcText();
+    return;
+  }
+
   if (/^[0-9]$/.test(event.key)) {
     event.preventDefault();
     inputCalcDigit(event.key);
@@ -494,6 +623,7 @@ calcDisplay.addEventListener("keydown", (event) => {
 
 calcDisplay.addEventListener("paste", (event) => {
   event.preventDefault();
+  event.stopPropagation();
   const pastedText = event.clipboardData?.getData("text") || "";
   setQuickCalculatorValue(pastedText);
 });
@@ -506,6 +636,25 @@ document.addEventListener("keydown", (event) => {
   const activeElement = document.activeElement;
   const activeTag = activeElement?.tagName;
   if ((activeTag === "INPUT" && activeElement !== calcDisplay) || activeTag === "SELECT") return;
+
+  if (
+    quickCalculatorActive &&
+    quickCalculator.contains(activeElement) &&
+    (event.ctrlKey || event.metaKey) &&
+    event.key.toLowerCase() === "a"
+  ) {
+    event.preventDefault();
+    calcDisplay.focus();
+    calcDisplay.select();
+    return;
+  }
+
+  if (quickCalculatorActive && quickCalculator.contains(activeElement) && event.key === "Delete") {
+    event.preventDefault();
+    deleteSelectedCalcText();
+    return;
+  }
+
   if (activeElement === calcDisplay) return;
 
   if (/^[0-9]$/.test(event.key)) {
@@ -541,6 +690,12 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+document.addEventListener("pointerdown", (event) => {
+  if (!quickCalculator.contains(event.target)) {
+    quickCalculatorActive = false;
+  }
+});
+
 payPerViewInput.addEventListener("input", calculate);
 perViewsInput.addEventListener("input", calculate);
 taxRateInput.addEventListener("input", calculate);
@@ -549,5 +704,7 @@ currencySelect.addEventListener("change", updateExchangeRate);
 if (!loadCalculator()) {
   addViewRow();
 }
+
+loadCalcHistory();
 updateExchangeRate();
 updateQuickCalculatorDisplay();

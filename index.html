@@ -111,6 +111,19 @@
             <p class="eyebrow">Quick calculator</p>
             <h2 id="simple-calculator-title">Calculator</h2>
           </div>
+          <button class="calc-history-toggle" id="calcHistoryToggle" type="button" aria-expanded="false" aria-controls="calcHistoryPanel">
+            History
+          </button>
+        </div>
+
+        <div class="calc-history-panel" id="calcHistoryPanel" hidden>
+          <div class="calc-history-panel-header">
+            <h3>Calculation history</h3>
+            <button class="calc-history-clear" id="clearCalcHistory" type="button">Clear</button>
+          </div>
+          <div class="calc-history-list" id="calcHistoryList" aria-live="polite">
+            <p class="calc-history-empty">No calculations yet.</p>
+          </div>
         </div>
 
         <div class="calc-body">
