@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler
 
 clients = {}
 clients_lock = threading.Lock()
-presence_ttl_seconds = 45
+presence_ttl_seconds = 15
 
 
 def send_json(request_handler, payload, status=200):
