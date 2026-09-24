@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Downloader | Rakashii</title>
+    <title>Rakashii Tools</title>
     <style>
       :root {
         color-scheme: dark;
@@ -370,13 +370,9 @@
 
       document.querySelectorAll(".format-button").forEach((button) => {
         button.addEventListener("click", () => {
-          const nextFormat = button.dataset.format;
-          if (nextFormat === currentFormat) return;
-
           document.querySelectorAll(".format-button").forEach((item) => item.classList.remove("active"));
           button.classList.add("active");
-          currentFormat = nextFormat;
-          resetCardsForFormat();
+          currentFormat = button.dataset.format;
           cardData.forEach((_, index) => renderCard(index));
         });
       });
@@ -408,7 +404,6 @@
 
       function friendlyError(error) {
         if (!error) return "Something went wrong";
-        if (error.includes("API returned a page instead of JSON")) return "Downloader API is not deployed correctly. Redeploy the latest files.";
         if (error.includes("Unsupported URL")) return "This URL is not supported";
         if (error.includes("Video unavailable")) return "Video is unavailable or private";
         if (error.includes("Private video")) return "This video is private";
@@ -416,36 +411,6 @@
         if (error.includes("HTTP Error 404")) return "Video not found";
         if (error.includes("timed out") || error.includes("Timed out")) return "Request timed out. Try again.";
         return error.length > 96 ? `${error.slice(0, 96)}...` : error;
-      }
-
-      async function readJson(response) {
-        const text = await response.text();
-        try {
-          return JSON.parse(text);
-        } catch {
-          const preview = text.trim().slice(0, 80) || response.statusText;
-          throw new Error(`API returned a page instead of JSON (${response.status}): ${preview}`);
-        }
-      }
-
-      function filenameFromResponse(response, fallback) {
-        const disposition = response.headers.get("Content-Disposition") || "";
-        const match = disposition.match(/filename="?([^"]+)"?/i);
-        return match ? match[1] : fallback;
-      }
-
-      function resetCardsForFormat() {
-        cardData.forEach((card) => {
-          if (!["ready", "downloading", "done", "error"].includes(card.status)) return;
-          if (card.blobUrl) URL.revokeObjectURL(card.blobUrl);
-          card.status = "ready";
-          card.error = null;
-          card.jobId = null;
-          card.filename = null;
-          card.blobUrl = null;
-          card.downloadedFormat = null;
-          card.requestKey = null;
-        });
       }
 
       async function go() {
@@ -465,7 +430,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: urls[index] }),
               });
-              const data = await readJson(response);
+              const data = await response.json();
               if (data.urls) urls.splice(index, 1, ...data.urls);
             } catch {}
           }
@@ -482,7 +447,7 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ url }),
             });
-            const data = await readJson(response);
+            const data = await response.json();
 
             if (data.error) {
               cardData[index] = { ...cardData[index], status: "info-error", error: data.error };
@@ -603,11 +568,8 @@
 
       async function downloadCard(index) {
         const card = cardData[index];
-        const requestedFormat = currentFormat;
-        const requestKey = `${Date.now()}-${Math.random()}`;
         card.status = "downloading";
         card.error = null;
-        card.requestKey = requestKey;
         renderCard(index);
 
         try {
@@ -616,32 +578,12 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               url: card.url,
-              format: requestedFormat,
+              format: currentFormat,
               format_id: card.selectedFormatId,
               title: card.title || "",
             }),
           });
-
-          if (card.requestKey !== requestKey) return;
-
-          const contentType = response.headers.get("Content-Type") || "";
-          if (!contentType.includes("application/json")) {
-            if (!response.ok) throw new Error(`Download failed (${response.status})`);
-            const blob = await response.blob();
-            if (card.requestKey !== requestKey) return;
-            const filename = filenameFromResponse(response, `${card.title || "download"}.${requestedFormat === "audio" ? "mp3" : "mkv"}`);
-            if (card.blobUrl) URL.revokeObjectURL(card.blobUrl);
-            card.status = "done";
-            card.filename = filename;
-            card.blobUrl = URL.createObjectURL(blob);
-            card.downloadedFormat = requestedFormat;
-            renderCard(index);
-            saveBlobUrl(card.blobUrl, filename);
-            return;
-          }
-
-          const data = await readJson(response);
-          if (card.requestKey !== requestKey) return;
+          const data = await response.json();
           if (data.error) {
             card.status = "error";
             card.error = data.error;
@@ -649,30 +591,20 @@
             return;
           }
           card.jobId = data.job_id;
-          card.downloadedFormat = requestedFormat;
-          pollCard(index, requestKey);
+          pollCard(index);
         } catch (error) {
-          if (card.requestKey !== requestKey) return;
           card.status = "error";
           card.error = error.message;
           renderCard(index);
         }
       }
 
-      function pollCard(index, requestKey) {
+      function pollCard(index) {
         const card = cardData[index];
         const interval = setInterval(async () => {
-          if (card.requestKey !== requestKey) {
-            clearInterval(interval);
-            return;
-          }
           try {
             const response = await fetch(`/api/status/${card.jobId}`);
-            const data = await readJson(response);
-            if (card.requestKey !== requestKey) {
-              clearInterval(interval);
-              return;
-            }
+            const data = await response.json();
             if (data.status === "done") {
               clearInterval(interval);
               card.status = "done";
@@ -696,21 +628,10 @@
 
       function saveCard(index) {
         const card = cardData[index];
-        if (card.blobUrl) {
-          saveBlobUrl(card.blobUrl, card.filename || "download");
-          return;
-        }
         if (!card.jobId) return;
         const link = document.createElement("a");
         link.href = `/api/file/${card.jobId}`;
         link.download = card.filename || "";
-        link.click();
-      }
-
-      function saveBlobUrl(objectUrl, filename) {
-        const link = document.createElement("a");
-        link.href = objectUrl;
-        link.download = filename || "download";
         link.click();
       }
 
