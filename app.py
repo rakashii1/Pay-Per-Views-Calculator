@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import uuid
 
 import imageio_ffmpeg
@@ -21,6 +22,9 @@ DOWNLOAD_DIR = (
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 jobs = {}
+presence_clients = {}
+presence_lock = threading.Lock()
+PRESENCE_TTL_SECONDS = 45
 YTDLP_CMD = [sys.executable, "-m", "yt_dlp"]
 FFMPEG_LOCATION = imageio_ffmpeg.get_ffmpeg_exe()
 
@@ -46,6 +50,22 @@ def parse_ytdlp_json(stdout):
         if line:
             return json.loads(line)
     raise ValueError("yt-dlp returned no data")
+
+
+def get_presence_count(client_id=None):
+    now = time.time()
+    with presence_lock:
+        expired_clients = [
+            key for key, last_seen in presence_clients.items()
+            if now - last_seen > PRESENCE_TTL_SECONDS
+        ]
+        for key in expired_clients:
+            presence_clients.pop(key, None)
+
+        if client_id:
+            presence_clients[client_id] = now
+
+        return len(presence_clients)
 
 
 def convert_to_compatible_mp4(source_path, job_id):
@@ -192,6 +212,16 @@ def calculator_script():
     return send_from_directory(BASE_DIR, "script.js")
 
 
+@app.route("/presence.css")
+def presence_styles():
+    return send_from_directory(BASE_DIR, "presence.css")
+
+
+@app.route("/presence.js")
+def presence_script():
+    return send_from_directory(BASE_DIR, "presence.js")
+
+
 @app.route("/downloader")
 @app.route("/downloader.html")
 def downloader():
@@ -243,6 +273,23 @@ def get_info():
         return jsonify({"error": "Timed out fetching video info"}), 400
     except Exception as error:
         return jsonify({"error": str(error)}), 400
+
+
+@app.route("/api/presence", methods=["GET", "POST"])
+def presence():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        client_id = str(data.get("clientId", "")).strip()[:128]
+        if not client_id:
+            return jsonify({"error": "No client ID provided"}), 400
+        count = get_presence_count(client_id)
+    else:
+        count = get_presence_count()
+
+    response = jsonify({"ok": True, "count": count})
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 
 @app.route("/api/playlist", methods=["POST"])
