@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import threading
 import uuid
 
@@ -12,7 +13,11 @@ from flask import Flask, jsonify, render_template, request, send_file, send_from
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(__file__)
-DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
+DOWNLOAD_DIR = (
+    os.path.join(tempfile.gettempdir(), "reclip-downloads")
+    if os.environ.get("VERCEL")
+    else os.path.join(BASE_DIR, "downloads")
+)
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 jobs = {}

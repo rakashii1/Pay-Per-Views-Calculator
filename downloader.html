@@ -404,6 +404,7 @@
 
       function friendlyError(error) {
         if (!error) return "Something went wrong";
+        if (error.includes("API returned a page instead of JSON")) return "Downloader API is not deployed correctly. Redeploy the latest files.";
         if (error.includes("Unsupported URL")) return "This URL is not supported";
         if (error.includes("Video unavailable")) return "Video is unavailable or private";
         if (error.includes("Private video")) return "This video is private";
@@ -411,6 +412,16 @@
         if (error.includes("HTTP Error 404")) return "Video not found";
         if (error.includes("timed out") || error.includes("Timed out")) return "Request timed out. Try again.";
         return error.length > 96 ? `${error.slice(0, 96)}...` : error;
+      }
+
+      async function readJson(response) {
+        const text = await response.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          const preview = text.trim().slice(0, 80) || response.statusText;
+          throw new Error(`API returned a page instead of JSON (${response.status}): ${preview}`);
+        }
       }
 
       async function go() {
@@ -430,7 +441,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: urls[index] }),
               });
-              const data = await response.json();
+              const data = await readJson(response);
               if (data.urls) urls.splice(index, 1, ...data.urls);
             } catch {}
           }
@@ -447,7 +458,7 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ url }),
             });
-            const data = await response.json();
+            const data = await readJson(response);
 
             if (data.error) {
               cardData[index] = { ...cardData[index], status: "info-error", error: data.error };
@@ -583,7 +594,7 @@
               title: card.title || "",
             }),
           });
-          const data = await response.json();
+          const data = await readJson(response);
           if (data.error) {
             card.status = "error";
             card.error = data.error;
@@ -604,7 +615,7 @@
         const interval = setInterval(async () => {
           try {
             const response = await fetch(`/api/status/${card.jobId}`);
-            const data = await response.json();
+            const data = await readJson(response);
             if (data.status === "done") {
               clearInterval(interval);
               card.status = "done";
