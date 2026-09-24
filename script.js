@@ -616,7 +616,12 @@ calcDisplay.addEventListener("keydown", (event) => {
     return;
   }
 
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") return;
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    ["c", "v"].includes(event.key.toLowerCase())
+  ) {
+    return;
+  }
   if (["Tab", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
 });
