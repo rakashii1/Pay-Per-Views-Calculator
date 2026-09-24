@@ -424,6 +424,12 @@
         }
       }
 
+      function filenameFromResponse(response, fallback) {
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const match = disposition.match(/filename="?([^"]+)"?/i);
+        return match ? match[1] : fallback;
+      }
+
       async function go() {
         const urls = parseUrls(urlsInput.value);
         if (!urls.length) return;
@@ -594,6 +600,19 @@
               title: card.title || "",
             }),
           });
+
+          const contentType = response.headers.get("Content-Type") || "";
+          if (!contentType.includes("application/json")) {
+            if (!response.ok) throw new Error(`Download failed (${response.status})`);
+            const blob = await response.blob();
+            const filename = filenameFromResponse(response, `${card.title || "download"}.${currentFormat === "audio" ? "mp3" : "mkv"}`);
+            card.status = "done";
+            card.filename = filename;
+            renderCard(index);
+            saveBlob(blob, filename);
+            return;
+          }
+
           const data = await readJson(response);
           if (data.error) {
             card.status = "error";
@@ -644,6 +663,15 @@
         link.href = `/api/file/${card.jobId}`;
         link.download = card.filename || "";
         link.click();
+      }
+
+      function saveBlob(blob, filename) {
+        const link = document.createElement("a");
+        const objectUrl = URL.createObjectURL(blob);
+        link.href = objectUrl;
+        link.download = filename || "download";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
       }
 
       async function downloadAll() {
